@@ -131,16 +131,29 @@ const server = http.createServer(async (req, res) => {
       catch(e){return sendError(res,400,e.message);}
     }
   }
+  
   // Serve frontend files
-  let file = url.pathname === "/" ? "index.html" : url.pathname.replace(/^\/+/,"");
-  const full = path.join(__dirname,"public",file);
-  if (!full.startsWith(path.join(__dirname,"public"))) return sendError(res,403,"Forbidden");
-  fs.readFile(full,(err,data)=>{
-    if(err) return send(res,404,"Not found","text/plain; charset=utf-8");
-    const ext=path.extname(full);
-    const types={".html":"text/html; charset=utf-8",".css":"text/css; charset=utf-8",".js":"text/javascript; charset=utf-8",".png":"image/png",".svg":"image/svg+xml"};
-    send(res,200,data,types[ext]||"application/octet-stream");
+  let file = url.pathname === "/" ? "index.html" : url.pathname.replace(/^\/+/, "");
+  let full = path.join(__dirname, "public", file);
+
+  if (url.pathname === "/" && !fs.existsSync(full)) {
+    full = path.join(__dirname, "index.html");
+  }
+
+  if (!full.startsWith(path.join(__dirname, "public")) &&
+      full !== path.join(__dirname, "index.html")) {
+    return sendError(res, 403, "Forbidden");
+  }
+
+  fs.readFile(full, (err, data) => {
+    if (err) return send(res, 404, "Not found", "text/plain; charset=utf-8");
+    const ext = path.extname(full);
+    const types = {
+      ".html": "text/html; charset=utf-8",
+      ".css": "text/css; charset=utf-8",
+      ".js": "text/javascript; charset=utf-8"
+    };
+    send(res, 200, data, types[ext] || "application/octet-stream");
   });
 });
 
-server.listen(PORT,"0.0.0.0",()=>console.log(`CreatorCircle running on ${PORT}`));
